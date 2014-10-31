@@ -2,6 +2,7 @@
 import Data.Ord
 import Text.CSV.Lazy.String
 import Data.List
+import System.IO
 
 splitLength = 50
 
@@ -21,15 +22,16 @@ getCountData t =  map ( reverse . sortBy (comparing snd)) $ map
 	(map (\x -> ((head x),length x))) $ 
 	map group $ map sort $ transpose t
 
+
+
 loadTestData = do
 	testFile <- readFile "data/test_rev2"
 	let cfile = fromCSVTable $ csvTable $ parseCSV testFile
 	let coloum = head cfile
 	let body = take 1000 $ tail cfile
-	let countData = map (\(x,y) -> (x , getCountData y )) $ mySplit body 
-	-- let output = zip coloum coloumList
-	mapM (\(_,x) -> appendFile "testdata" ( (show x) ++ "\n") )  countData
+	let countData = map  getCountData  $ mySplit' body 
+	let output =  map (zip coloum) countData
+	mapM (\(file, x) -> appendFile  (FilePath file)  ((show x) ++ "\n") ) output
+	--return output
+	--mapM (\(_,x) -> appendFile "testdata" ( (show x) ++ "\n") )  countData
 	
-
-
---sortBy (comparing  snd) $ map (\x -> ((head x),length x)) $ 
