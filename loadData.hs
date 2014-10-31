@@ -5,6 +5,8 @@ import Data.List
 
 splitLength = 50
 
+workdata = "workdata/"
+
 mySplit' [] = []
 mySplit' xs = [x] ++  mySplit' t 
 	where
@@ -26,9 +28,8 @@ loadTestData = do
 	let body = take 1000 $ tail cfile
 	let countData = map (\(x,y) -> (x , getCountData y )) $ mySplit body 
 	-- let output = zip coloum coloumList
-	--writeFile "testdata"  $ unlines $ (map show output)
-	return countData
-
+	mapM (\(_,x) -> appendFile "testdata" ( (show x) ++ "\n") )  countData
+	
 
 
 --sortBy (comparing  snd) $ map (\x -> ((head x),length x)) $ 
