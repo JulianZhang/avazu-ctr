@@ -1,18 +1,17 @@
 
+import Data.Ord
 import Text.CSV.Lazy.String
+import Data.List
 
-
-
-
-usedChar = choice [letter,digit,(char '_'),(char '-')]
-
-csvSep =  sepBy (many1 usedChar) (char ',')                 
+                
 
 loadTestData = do
 	testFile <- readFile "data/test_rev2"
-	let cfile = parseCSV testFile
+	let cfile = fromCSVTable $ csvTable $ parseCSV testFile
 	let coloum = head cfile
-	let body = tail cfile 
-	return $ head $ fromCSVTable $ csvTable  body
+	let body = take 1000 $ tail cfile
+	let coloumList = map ( reverse . sortBy (comparing snd)) $ map (map (\x -> ((head x),length x))) $  map group $ map sort $ transpose body 
+	let output = zip coloum coloumList
+	return   output
 
-test = parse csvSep "fail" "sfsdf,sdfsdf,sdfsdf,12312,234d"
+--sortBy (comparing  snd) $ map (\x -> ((head x),length x)) $ 
