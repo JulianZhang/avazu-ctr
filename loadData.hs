@@ -36,10 +36,10 @@ loadTestData = do
 	testFile <- readFile "data/test_rev2"
 	let cfile = fromCSVTable $ csvTable $ parseCSV testFile
 	let coloum = head cfile
-	let body = take 120000 $ tail cfile
+	let body =  tail cfile
 	let countData = foldl1 (zipWith  foldData)  $ map  getCountData  $ mySplit' body 
-	let output =  zip coloum countData
+	let output =  zip coloum  $ map ( reverse . sortBy (comparing snd) ) countData
 	--mapM (\(file, x) -> appendFile  (FilePath file)  ((show x) ++ "\n") ) output
-	appendFile "testdata" $ foldl1 (\x y -> x ++"\n"++y)$map show output
+	appendFile "testdata" $ foldl1 (\x y -> x ++"\n"++y)$ map show $tail output
 	--mapM (\(_,x) -> appendFile "testdata" ( (show x) ++ "\n") )  countData
 	
