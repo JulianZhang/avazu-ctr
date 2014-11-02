@@ -3,8 +3,9 @@ import Data.Ord
 import Text.CSV.Lazy.String
 import Data.List
 import System.IO
+import Data.Function (on)
 
-splitLength = 50
+splitLength = 5000
 
 workdata = "workdata/"
 
@@ -22,16 +23,23 @@ getCountData t =  map ( reverse . sortBy (comparing snd)) $ map
 	(map (\x -> ((head x),length x))) $ 
 	map group $ map sort $ transpose t
 
+foldData::Ord a=> [(a,Int)]->[(a,Int)]->[(a,Int)]
+foldData lxs rxs = map combind wlist
+	where
+		wlist = groupBy ((==) `on` fst) $ sortBy (comparing fst) $ lxs ++ rxs
+		combind xs 
+		 | 1==(length xs) = head xs
+		 | 2 ==(length xs) = (((fst . head) xs ), ((snd . head) xs)+((snd . last) xs))
 
 
 loadTestData = do
 	testFile <- readFile "data/test_rev2"
 	let cfile = fromCSVTable $ csvTable $ parseCSV testFile
 	let coloum = head cfile
-	let body = take 1000 $ tail cfile
-	let countData = map  getCountData  $ mySplit' body 
-	let output =  map (zip coloum) countData
-	mapM (\(file, x) -> appendFile  (FilePath file)  ((show x) ++ "\n") ) output
-	--return output
+	let body = take 120000 $ tail cfile
+	let countData = foldl1 (zipWith  foldData)  $ map  getCountData  $ mySplit' body 
+	let output =  zip coloum countData
+	--mapM (\(file, x) -> appendFile  (FilePath file)  ((show x) ++ "\n") ) output
+	appendFile "testdata" $ foldl1 (\x y -> x ++"\n"++y)$map show output
 	--mapM (\(_,x) -> appendFile "testdata" ( (show x) ++ "\n") )  countData
 	
