@@ -19,8 +19,8 @@ mySplit' xs = [x] ++  mySplit' t
 --mySplit::[a]->[(int,[a])]
 mySplit xs = zip [1..] ( mySplit' xs)
 
-getCountData::Ord a => [[a]] -> [[(a,Int)]]
-getCountData t =   map 
+getBlockCount::Ord a => [[a]] -> [[(a,Int)]]
+getBlockCount t =   map 
 	(map (\x -> ((head x),length x))) $ 
 	map group $ map sort $ transpose t
 
@@ -38,14 +38,11 @@ loadTestData datalenthg = do
 	let cfile = fromCSVTable $ csvTable $ parseCSV testFile
 	let coloum = head cfile
 	let body = take datalenthg $ tail cfile
-	let countData = foldl1' (zipWith  foldData)  $ map  getCountData  $ mySplit' body 
+	let countData = foldl1' (zipWith  foldData)  $ map  getBlockCount  $ mySplit' body 
 	let output =  zip coloum  $ map ( reverse . sortBy (comparing snd) ) countData
-	--mapM (\(file, x) -> appendFile  (FilePath file)  ((show x) ++ "\n") ) output
 	appendFile "testdata" $ foldl1 (\x y -> x ++"\n"++y)$ map show $tail output
-	--mapM (\(_,x) -> appendFile "testdata" ( (show x) ++ "\n") )  countData
-
-
+	
 main = do 
 	s<-getArgs
-	loadTestData $ read  $ head s
+	loadTestData $ read  $ last s
 	
