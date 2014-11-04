@@ -10,6 +10,10 @@ import Pipes
 import qualified Pipes.Prelude as P
 import Pipes.Safe (bracket,SafeT(..), runSafeT)
 
+import qualified Data.Sequence as DS
+
+import Data.Foldable (toList)
+
 splitLength = 5000
 
 workdata = "workdata/"
@@ -36,17 +40,28 @@ getBlockCount t =   map
 	(map (\x -> ((head x),length x))) $ 
 	map group $ map sort $ transpose t
 
-foldData::Ord a=> [(a,Int)]->[(a,Int)]->[(a,Int)]
+--foldData::Ord a=> [(a,Int)]->[(a,Int)]->[(a,Int)]
 foldData lxs rxs = map combind wlist
 	where
 		wlist = groupBy ((==) `on` fst) $ sortBy (comparing fst) $ lxs ++ rxs
 		combind xs 
 		 | 1==(length xs) = head xs
-		 | 2 ==(length xs) = (((fst . head) xs ), ((snd . head) xs)+((snd . last) xs))
+		 | 2 ==(length xs) = (((fst . head) xs ), 
+		 	((snd . head) xs)+((snd . last) xs))
+
+foldDataOne lxs rs = addData inList lxs rs
+	where 
+		inList =  DS.findIndicesL (\x -> (fst rs) == (fst x)) lxs
+
+--addData::[Int]->seq a->seq b ->seq a
+addData [] lxs rs = lxs DS.|> rs 
+addData is lxs rs = DS.adjust addItem (head is) lxs
+	where 
+	addItem (s,i) = (s,i+1)
 
 csvFileHandle::Producer' String (SafeT IO) ()
 csvFileHandle =  bracket 
-	(do {h <- openFile "data/sample.csv" ReadMode;return h}) 
+	(do {h <- openFile "data/test_rev2" ReadMode;return h}) 
 	(\h ->return h)
 	P.fromHandle  
 
@@ -63,23 +78,30 @@ loadTestData datalenthg = do
 	-- aList <- [ (do { return await}) | y <- [1..10]  ]
 	-- putStrLn $ show aList
 
-tStep n a = n+1
+--tStep::[[(String,Int)]]->[[(String,Int)]]->[[(String,Int)]]
+tStep n a = DS.zipWith foldDataOne n (myMap a)
 
 tDone n = n
 
-myConsumer::Consumer String IO String
+myConsumer::Consumer String (SafeT IO) [String]
 myConsumer = do
-	str1 <- await
-	str2 <- await
-	return $ str1 ++ str2
+	str <- await
+	return $ splitCSV str
+
+seq1 = DS.fromList [(1,2),(2,3),(3,1),(4,2),(5,1),(6,4)]
+
+myMap str =  DS.fromList  $ map (\x -> (x, 1) )  $ tail $ splitCSV str 
+
+initList = DS.replicate 50 $ DS.singleton ("null",0)
 
 main = do 
 	s<- getArgs
 	let num = (read . head) s 
-	let p = csvFileHandle >-> P.take num 
+	--hStr <- runSafeT $ runEffect $ csvFileHandle >-> P.take 1 >->myConsumer
+	let p =  csvFileHandle >-> P.drop 1 >-> P.take num  
 	-- runSafeT $ runEffect $ 
 	--let n = P.fold tStep 0 tDone t
-	t <- runSafeT $ P.fold tStep 0 tDone p
-	putStrLn $ show t
+	t <- runSafeT $ P.fold tStep initList tDone p
+	mapM (\x -> appendFile "testdata"  (show x)) $ toList t
 	--runSafeT $ runEffect $ P.fold tStep 0 tDone $ csvFileHandle
 	
