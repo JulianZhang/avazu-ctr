@@ -51,11 +51,11 @@ foldData lxs rxs = map combind wlist
 
 foldDataOne lxs rs = addData inList lxs rs
 	where 
-		inList =  DS.findIndicesL (\x -> (fst rs) == (fst x)) lxs
+		inList =  DS.findIndexL (\x -> (fst rs) == (fst x)) lxs
 
---addData::[Int]->seq a->seq b ->seq a
-addData [] lxs rs = lxs DS.|> rs 
-addData is lxs rs = DS.adjust addItem (head is) lxs
+-- addData::[Int]->seq a->seq b ->seq a
+addData Nothing lxs rs = lxs DS.|> rs 
+addData (Just is) lxs rs = DS.adjust addItem is lxs
 	where 
 	addItem (s,i) = (s,i+1)
 
