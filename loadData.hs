@@ -14,6 +14,14 @@ splitLength = 5000
 
 workdata = "workdata/"
 
+splitCSV "" = []
+splitCSV str = [s1] ++ splitCSV' s2
+	where 
+	(s1,s2) = break (\x -> ','==x) str
+
+splitCSV' "" = []
+splitCSV' str = splitCSV $ tail str
+
 mySplit' [] = []
 mySplit' xs = [x] ++  mySplit' t 
 	where
