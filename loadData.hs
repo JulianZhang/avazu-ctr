@@ -51,9 +51,14 @@ loadTestData datalenthg = do
 	let countData = foldl1' (zipWith  foldData)  $ map  getBlockCount  $ mySplit' body 
 	let output =  zip coloum  $ map ( reverse . sortBy (comparing snd) ) countData
 	appendFile "testdata" $ foldl1 (\x y -> x ++"\n"++y)$ map show $tail output
-	
+
+myConsumer::Consumer String IO ()
+myConsumer = do
+	aList <- [ (do { return await}) | y <- [1..10]  ]
+	putStrLn $ show aList
+
 main = do 
-	s<-getArgs
-	--putStrLn $ show s
-	runSafeT $ runEffect $ csvFileHandle >-> P.take 5 >-> P.stdoutLn
+	s<- getArgs
+	let num = (read . head) s 
+	runSafeT $ runEffect $ csvFileHandle >-> P.take num >-> P.stdoutLn
 	
