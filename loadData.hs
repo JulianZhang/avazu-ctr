@@ -6,6 +6,10 @@ import System.IO
 import Data.Function (on)
 import System.Environment
 
+import Pipes
+import qualified Pipes.Prelude as P
+import Pipes.Safe (bracket,SafeT(..), runSafeT)
+
 splitLength = 5000
 
 workdata = "workdata/"
@@ -32,6 +36,12 @@ foldData lxs rxs = map combind wlist
 		 | 1==(length xs) = head xs
 		 | 2 ==(length xs) = (((fst . head) xs ), ((snd . head) xs)+((snd . last) xs))
 
+csvFileHandle::Producer' String (SafeT IO) ()
+csvFileHandle =  bracket 
+	(do {h <- openFile "data/sample.csv" ReadMode;return h}) 
+	(\h ->return h)
+	P.fromHandle  
+
 
 loadTestData datalenthg = do
 	testFile <- readFile "data/test_rev2"
@@ -44,5 +54,6 @@ loadTestData datalenthg = do
 	
 main = do 
 	s<-getArgs
-	loadTestData $ read  $ last s
+	--putStrLn $ show s
+	runSafeT $ runEffect $ csvFileHandle >-> P.take 5 >-> P.stdoutLn
 	
