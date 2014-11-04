@@ -52,13 +52,26 @@ loadTestData datalenthg = do
 	let output =  zip coloum  $ map ( reverse . sortBy (comparing snd) ) countData
 	appendFile "testdata" $ foldl1 (\x y -> x ++"\n"++y)$ map show $tail output
 
-myConsumer::Consumer String IO ()
+	-- aList <- [ (do { return await}) | y <- [1..10]  ]
+	-- putStrLn $ show aList
+
+tStep n a = n+1
+
+tDone n = n
+
+myConsumer::Consumer String IO String
 myConsumer = do
-	aList <- [ (do { return await}) | y <- [1..10]  ]
-	putStrLn $ show aList
+	str1 <- await
+	str2 <- await
+	return $ str1 ++ str2
 
 main = do 
 	s<- getArgs
 	let num = (read . head) s 
-	runSafeT $ runEffect $ csvFileHandle >-> P.take num >-> P.stdoutLn
+	let p = csvFileHandle >-> P.take num 
+	-- runSafeT $ runEffect $ 
+	--let n = P.fold tStep 0 tDone t
+	t <- runSafeT $ P.fold tStep 0 tDone p
+	putStrLn $ show t
+	--runSafeT $ runEffect $ P.fold tStep 0 tDone $ csvFileHandle
 	
