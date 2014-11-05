@@ -16,7 +16,7 @@ import Data.Foldable (toList)
 import Control.Monad (unless)
 
 
-splitLength = 2
+splitLength = 5000
 
 workdata = "workdata/"
 
@@ -73,7 +73,7 @@ csvFileHandle =  bracket
 
 readFileBatch h = do
 	slist <- lift $ readFileBatch' h []
-	yield  slist
+	yield  $ getBlockCount $ map splitCSV slist
 	let eof = null slist
 	unless eof $  readFileBatch h
 
@@ -109,7 +109,7 @@ loadTestData datalenthg = do
 --tStep::[[(String,Int)]]->[[(String,Int)]]->[[(String,Int)]]
 --tStep n a = DS.zipWith foldDataOne n (myMap a)
 
-tStep n a = n ++ a
+tStep n a = zipWith foldData n a
 
 tDone n = n
 
@@ -127,10 +127,11 @@ toString = do
 	sl <- await
 	return $ show sl
 
-initList = [[]] -- DS.replicate 50 $ DS.singleton ("null",0)
+initList =  repeat [("null",0)]
 
 main = do 
 	s<- getArgs
+	let num =  (1+) $ (\x -> div x splitLength)  $ (read . head) s 
 	--let num = (read . head) s 
 	--hStr <- runSafeT $ runEffect $ csvFileHandle >-> P.take 1 >->myConsumer
 	--return hStr
@@ -140,10 +141,11 @@ main = do
 	--t <- runSafeT $ P.fold tStep initList tDone p
 	-- mapM (\x -> appendFile "testdata"  (show x)) $ toList t
 	--runSafeT $ runEffect $ P.fold tStep 0 tDone $ csvFileHandle
-	withFile "data/sample.csv" ReadMode $ \h -> do 
+	withFile "data/test_rev2" ReadMode $ \h -> do 
 		csvHead <- hGetLine h 
-		t <- P.fold tStep initList tDone $ readFileBatch h
-		return t
+		t <- P.fold tStep initList tDone $ readFileBatch h >-> P.take num
+		let outList = tail $ zip (splitCSV csvHead) t 
+		mapM (\x -> appendFile "testdata"  (show x)) outList
 		-- p <- 
 		--runEffect $ readFileBatch h >-> P.stdoutLn 
 	--	t <- runEffect $ readFileBatch h >-> toString
