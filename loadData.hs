@@ -15,6 +15,8 @@ import qualified Data.Sequence as DS
 import Data.Foldable (toList)
 import Control.Monad (unless)
 
+import System.Mem
+
 
 splitLength = 5000
 
@@ -87,7 +89,7 @@ readFileBatch' h s
 			True -> do {return s }
 			False -> do  
 				str <- hGetLine h
-				let newS = s ++ [str]
+				let newS = str:s 
 				let rStr = readFileBatch' h newS
 				rStr 
 
@@ -143,7 +145,9 @@ main = do
 	--runSafeT $ runEffect $ P.fold tStep 0 tDone $ csvFileHandle
 	withFile "data/test_rev2" ReadMode $ \h -> do 
 		csvHead <- hGetLine h 
+		performGC
 		t <- P.fold tStep initList tDone $ readFileBatch h >-> P.take num
+		performGC
 		let outList = tail $ zip (splitCSV csvHead) t 
 		mapM (\x -> appendFile "testdata"  (show x)) outList
 		-- p <- 
