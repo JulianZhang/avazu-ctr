@@ -17,8 +17,10 @@ import Control.Monad (unless)
 
 import System.Mem
 
+import qualified Data.Map as DM
 
-splitLength = 100
+
+splitLength = 10
 
 workdata = "workdata/"
 
@@ -46,19 +48,14 @@ mySplit xs = zip [1..] ( mySplit' xs)
 
 getBlockCount t = map getCount $ transpose t
  
-getCount xs = zipWith (\x y -> (,) x  (length y) ) nlist nIndex
+getCount xs = DM.fromList $  zipWith (\x y -> (,) x  (length y) ) nlist nIndex
 	where 
 		nlist = nub xs
 		nIndex = map (\x -> elemIndices x xs) nlist
 
---foldData::Ord a=> [(a,Int)]->[(a,Int)]->[(a,Int)]
-foldData lxs rxs = map combind wlist
-	where
-		wlist = groupBy ((==) `on` fst) $ sortBy (comparing fst) $ lxs ++ rxs
-		combind xs 
-		 | 1==(length xs) = head xs
-		 | 2 ==(length xs) = (((fst . head) xs ), 
-		 	((snd . head) xs)+((snd . last) xs))
+foldData::Ord a=> DM.Map a Int -> DM.Map a Int -> DM.Map a Int 
+foldData lxs rxs = DM.unionWith (+) lxs rxs
+
 
 foldDataOne lxs rs = addData inList lxs rs
 	where 
@@ -103,14 +100,6 @@ readFileBatch' i h s
 
 
 
-loadTestData datalenthg = do
-	testFile <- readFile "data/test_rev2"
-	let cfile = fromCSVTable $ csvTable $ parseCSV testFile
-	let coloum = head cfile
-	let body = take datalenthg $ tail cfile
-	let countData = foldl1' (zipWith  foldData)  $ map  getBlockCount  $ mySplit' body 
-	let output =  zip coloum  $ map ( reverse . sortBy (comparing snd) ) countData
-	appendFile "testdata" $ foldl1 (\x y -> x ++"\n"++y)$ map show $tail output
 
 	-- aList <- [ (do { return await}) | y <- [1..10]  ]
 	-- putStrLn $ show aList
@@ -136,7 +125,10 @@ toString = do
 	sl <- await
 	return $ show sl
 
-initList =  repeat [("null",0)]
+--initList::[DM.Map [Char] Int]
+emptyMap = DM.empty::(DM.Map [Char] Int)
+
+initList = repeat emptyMap
 
 main = do 
 	s<- getArgs
