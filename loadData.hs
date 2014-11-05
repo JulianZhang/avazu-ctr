@@ -73,7 +73,7 @@ csvFileHandle =  bracket
 
 readFileBatch h = do
 	slist <- lift $ readFileBatch' h []
-	yield  $ show slist
+	yield  slist
 	let eof = null slist
 	unless eof $  readFileBatch h
 
@@ -140,11 +140,12 @@ main = do
 	--t <- runSafeT $ P.fold tStep initList tDone p
 	-- mapM (\x -> appendFile "testdata"  (show x)) $ toList t
 	--runSafeT $ runEffect $ P.fold tStep 0 tDone $ csvFileHandle
-	withFile "data/sample.csv" ReadMode $ \h -> do  
-		-- t <- P.fold tStep initList tDone $ readFileBatch h
-		-- return t
+	withFile "data/sample.csv" ReadMode $ \h -> do 
+		csvHead <- hGetLine h 
+		t <- P.fold tStep initList tDone $ readFileBatch h
+		return t
 		-- p <- 
-		runEffect $ readFileBatch h >-> P.stdoutLn 
+		--runEffect $ readFileBatch h >-> P.stdoutLn 
 	--	t <- runEffect $ readFileBatch h >-> toString
 	--	return t
 	
