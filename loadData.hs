@@ -18,7 +18,7 @@ import Control.Monad (unless)
 import System.Mem
 
 
-splitLength = 5000
+splitLength = 100
 
 workdata = "workdata/"
 
@@ -44,7 +44,7 @@ mySplit xs = zip [1..] ( mySplit' xs)
 --	(map (\x -> ((head x),length x))) $ 
 --	map group $ map sort $ transpose t
 
-getBlockCount t = map getCount t
+getBlockCount t = map getCount $ transpose t
  
 getCount xs = zipWith (\x y -> (,) x  (length y) ) nlist nIndex
 	where 
@@ -155,8 +155,8 @@ main = do
 		performGC
 		t <- P.fold tStep initList tDone $ readFileBatch h >-> P.take num
 		performGC
-		let outList = tail $ zip (splitCSV csvHead) t 
-		mapM (\x -> appendFile "testdata"  (show x)) outList
+		let outList = zip (splitCSV csvHead) t 
+		mapM (\x -> appendFile "testdata"  ((show x)++ "\n" ) ) outList
 		-- p <- 
 		--runEffect $ readFileBatch h >-> P.stdoutLn 
 	--	t <- runEffect $ readFileBatch h >-> toString
