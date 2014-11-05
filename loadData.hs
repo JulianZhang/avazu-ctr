@@ -14,6 +14,8 @@ import qualified Data.Sequence as DS
 
 import Data.Foldable (toList)
 
+import qualified Data.Map  as DM
+
 splitLength = 5000
 
 workdata = "workdata/"
@@ -36,10 +38,7 @@ mySplit' xs = [x] ++  mySplit' t
 mySplit xs = zip [1..] ( mySplit' xs)
 
 
-foldDataOne lxs rs = addData inList lxs rs
-	where 
-		inList =  DS.findIndexL (\x -> (fst rs) == (fst x)) lxs
-
+foldDataOne lxs rs = DM.unionWith (+) lxs rs
 -- addData::[Int]->seq a->seq b ->seq a
 addData Nothing lxs rs = lxs DS.|> rs 
 addData (Just is) lxs rs = DS.adjust addItem is lxs
@@ -53,7 +52,7 @@ csvFileHandle =  bracket
 	P.fromHandle  
 
 
---tStep::[[(String,Int)]]->[[(String,Int)]]->[[(String,Int)]]
+tStep::DS.Seq (DM.Map String Int)->[Char]->DS.Seq (DM.Map String Int)
 tStep n a = DS.zipWith foldDataOne n (myMap a)
 
 tDone n = n
@@ -62,9 +61,13 @@ tDone n = n
 
 seq1 = DS.fromList [(1,2),(2,3),(3,1),(4,2),(5,1),(6,4)]
 
-myMap str =  DS.fromList  $ map (\x -> (x, 1) )  $ tail $ splitCSV str 
+--myMap::[Char]->
+myMap str =  DS.fromList  $ map (\x -> (DM.fromList [(x, 1)]) )
+  $ tail $ splitCSV str 
 
-initList = DS.replicate 50 $ DS.singleton ("null",0)
+
+
+initList = DS.replicate 50 $ DM.fromList [("null",0)]
 
 main = do 
 	s<- getArgs
