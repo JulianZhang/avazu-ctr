@@ -73,7 +73,7 @@ csvFileHandle =  bracket
 
 readFileBatch h = do
 	slist <- lift $ readFileBatch' h []
-	yield  slist
+	yield  $ show slist
 	let eof = null slist
 	unless eof $  readFileBatch h
 
@@ -84,8 +84,8 @@ readFileBatch' h s
 	| otherwise = do
 		eof <- hIsEOF h
 		case eof of 
-			False -> do {return s }
-			True -> do  
+			True -> do {return s }
+			False -> do  
 				str <- hGetLine h
 				let newS = s ++ [str]
 				let rStr = readFileBatch' h newS
@@ -132,17 +132,19 @@ initList = [[]] -- DS.replicate 50 $ DS.singleton ("null",0)
 main = do 
 	s<- getArgs
 	--let num = (read . head) s 
-	hStr <- runSafeT $ runEffect $ csvFileHandle >-> P.take 1 >->myConsumer
-	return hStr
+	--hStr <- runSafeT $ runEffect $ csvFileHandle >-> P.take 1 >->myConsumer
+	--return hStr
 	--let p =  csvFileHandle >-> P.drop 1 >-> P.take num  
 	-- runSafeT $ runEffect $ 
 	--let n = P.fold tStep 0 tDone t
 	--t <- runSafeT $ P.fold tStep initList tDone p
 	-- mapM (\x -> appendFile "testdata"  (show x)) $ toList t
 	--runSafeT $ runEffect $ P.fold tStep 0 tDone $ csvFileHandle
-	--withFile "data/sample.csv" ReadMode $ \h -> do  
+	withFile "data/sample.csv" ReadMode $ \h -> do  
 		-- t <- P.fold tStep initList tDone $ readFileBatch h
 		-- return t
+		-- p <- 
+		runEffect $ readFileBatch h >-> P.stdoutLn 
 	--	t <- runEffect $ readFileBatch h >-> toString
 	--	return t
 	
