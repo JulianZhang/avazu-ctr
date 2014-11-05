@@ -122,19 +122,27 @@ seq1 = DS.fromList [(1,2),(2,3),(3,1),(4,2),(5,1),(6,4)]
 
 myMap str =  DS.fromList  $ map (\x -> (x, 1) )  $ tail $ splitCSV str 
 
+toString::Consumer [String] IO String
+toString = do
+	sl <- await
+	return $ show sl
+
 initList = [[]] -- DS.replicate 50 $ DS.singleton ("null",0)
 
 main = do 
 	s<- getArgs
 	--let num = (read . head) s 
-	--hStr <- runSafeT $ runEffect $ csvFileHandle >-> P.take 1 >->myConsumer
+	hStr <- runSafeT $ runEffect $ csvFileHandle >-> P.take 1 >->myConsumer
+	return hStr
 	--let p =  csvFileHandle >-> P.drop 1 >-> P.take num  
 	-- runSafeT $ runEffect $ 
 	--let n = P.fold tStep 0 tDone t
 	--t <- runSafeT $ P.fold tStep initList tDone p
 	-- mapM (\x -> appendFile "testdata"  (show x)) $ toList t
 	--runSafeT $ runEffect $ P.fold tStep 0 tDone $ csvFileHandle
-	withFile "data/sample.csv" ReadMode $ \h -> do  
-		t <- P.fold tStep initList tDone $ readFileBatch h
-		return t
+	--withFile "data/sample.csv" ReadMode $ \h -> do  
+		-- t <- P.fold tStep initList tDone $ readFileBatch h
+		-- return t
+	--	t <- runEffect $ readFileBatch h >-> toString
+	--	return t
 	
