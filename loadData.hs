@@ -13,8 +13,10 @@ import Pipes.Safe (bracket,SafeT(..), runSafeT)
 import qualified Data.Sequence as DS
 
 import Data.Foldable (toList)
+import Control.Monad (unless)
 
-splitLength = 5000
+
+splitLength = 5
 
 workdata = "workdata/"
 
@@ -63,7 +65,33 @@ csvFileHandle::Producer' String (SafeT IO) ()
 csvFileHandle =  bracket 
 	(do {h <- openFile "data/test_rev2" ReadMode;return h}) 
 	(\h ->return h)
-	P.fromHandle  
+	P.fromHandle
+
+--csvFileBatchProducer::Producer' [[String]] IO ()
+--csvFileBatchProducer= do 
+--	withFile "data/sample" ReadMode (\h-> readFileBach h)
+
+readFileBach h = do
+	slist <- lift $ readFileBach' h []
+	yield  slist
+	let eof = null slist
+	unless eof $  readFileBach h
+
+readFileBach'::Handle->[String]->IO [String]
+readFileBach' h s 
+	| (length s)>=splitLength = do {return s} 
+	-- |  lift (hIsEOF h) = do {return s} 
+	| otherwise = do
+		eof <- hIsEOF h
+		case eof of 
+			False -> do {return s }
+			True -> do  
+				str <- hGetLine h
+				let newS = s ++ [str]
+				let rStr = readFileBach' h newS
+				rStr 
+
+
 
 
 loadTestData datalenthg = do
@@ -79,7 +107,9 @@ loadTestData datalenthg = do
 	-- putStrLn $ show aList
 
 --tStep::[[(String,Int)]]->[[(String,Int)]]->[[(String,Int)]]
-tStep n a = DS.zipWith foldDataOne n (myMap a)
+--tStep n a = DS.zipWith foldDataOne n (myMap a)
+
+tStep n a = n++a
 
 tDone n = n
 
@@ -92,16 +122,19 @@ seq1 = DS.fromList [(1,2),(2,3),(3,1),(4,2),(5,1),(6,4)]
 
 myMap str =  DS.fromList  $ map (\x -> (x, 1) )  $ tail $ splitCSV str 
 
-initList = DS.replicate 50 $ DS.singleton ("null",0)
+initList = [] -- DS.replicate 50 $ DS.singleton ("null",0)
 
 main = do 
 	s<- getArgs
-	let num = (read . head) s 
+	--let num = (read . head) s 
 	--hStr <- runSafeT $ runEffect $ csvFileHandle >-> P.take 1 >->myConsumer
-	let p =  csvFileHandle >-> P.drop 1 >-> P.take num  
+	--let p =  csvFileHandle >-> P.drop 1 >-> P.take num  
 	-- runSafeT $ runEffect $ 
 	--let n = P.fold tStep 0 tDone t
-	t <- runSafeT $ P.fold tStep initList tDone p
-	mapM (\x -> appendFile "testdata"  (show x)) $ toList t
+	--t <- runSafeT $ P.fold tStep initList tDone p
+	-- mapM (\x -> appendFile "testdata"  (show x)) $ toList t
 	--runSafeT $ runEffect $ P.fold tStep 0 tDone $ csvFileHandle
+	withFile "data/sample.csv" ReadMode $ \h -> do  
+		t <- P.fold tStep initList tDone $ readFileBach h
+		return t
 	
