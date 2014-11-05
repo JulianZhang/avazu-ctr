@@ -16,7 +16,7 @@ import Data.Foldable (toList)
 import Control.Monad (unless)
 
 
-splitLength = 5
+splitLength = 2
 
 workdata = "workdata/"
 
@@ -69,16 +69,16 @@ csvFileHandle =  bracket
 
 --csvFileBatchProducer::Producer' [[String]] IO ()
 --csvFileBatchProducer= do 
---	withFile "data/sample" ReadMode (\h-> readFileBach h)
+--	withFile "data/sample" ReadMode (\h-> readFileBatch h)
 
-readFileBach h = do
-	slist <- lift $ readFileBach' h []
+readFileBatch h = do
+	slist <- lift $ readFileBatch' h []
 	yield  slist
 	let eof = null slist
-	unless eof $  readFileBach h
+	unless eof $  readFileBatch h
 
-readFileBach'::Handle->[String]->IO [String]
-readFileBach' h s 
+readFileBatch'::Handle->[String]->IO [String]
+readFileBatch' h s 
 	| (length s)>=splitLength = do {return s} 
 	-- |  lift (hIsEOF h) = do {return s} 
 	| otherwise = do
@@ -88,7 +88,7 @@ readFileBach' h s
 			True -> do  
 				str <- hGetLine h
 				let newS = s ++ [str]
-				let rStr = readFileBach' h newS
+				let rStr = readFileBatch' h newS
 				rStr 
 
 
@@ -109,7 +109,7 @@ loadTestData datalenthg = do
 --tStep::[[(String,Int)]]->[[(String,Int)]]->[[(String,Int)]]
 --tStep n a = DS.zipWith foldDataOne n (myMap a)
 
-tStep n a = n++a
+tStep n a = n ++ a
 
 tDone n = n
 
@@ -122,7 +122,7 @@ seq1 = DS.fromList [(1,2),(2,3),(3,1),(4,2),(5,1),(6,4)]
 
 myMap str =  DS.fromList  $ map (\x -> (x, 1) )  $ tail $ splitCSV str 
 
-initList = [] -- DS.replicate 50 $ DS.singleton ("null",0)
+initList = [[]] -- DS.replicate 50 $ DS.singleton ("null",0)
 
 main = do 
 	s<- getArgs
@@ -135,6 +135,6 @@ main = do
 	-- mapM (\x -> appendFile "testdata"  (show x)) $ toList t
 	--runSafeT $ runEffect $ P.fold tStep 0 tDone $ csvFileHandle
 	withFile "data/sample.csv" ReadMode $ \h -> do  
-		t <- P.fold tStep initList tDone $ readFileBach h
+		t <- P.fold tStep initList tDone $ readFileBatch h
 		return t
 	
