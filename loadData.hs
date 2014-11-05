@@ -39,10 +39,17 @@ mySplit' xs = [x] ++  mySplit' t
 --mySplit::[a]->[(int,[a])]
 mySplit xs = zip [1..] ( mySplit' xs)
 
-getBlockCount::Ord a => [[a]] -> [[(a,Int)]]
-getBlockCount t =   map 
-	(map (\x -> ((head x),length x))) $ 
-	map group $ map sort $ transpose t
+-- getBlockCount::Ord a => [[a]] -> [[(a,Int)]]
+-- getBlockCount t =   map 
+--	(map (\x -> ((head x),length x))) $ 
+--	map group $ map sort $ transpose t
+
+getBlockCount t = map getCount t
+ 
+getCount xs = zipWith (\x y -> (,) x  (length y) ) nlist nIndex
+	where 
+		nlist = nub xs
+		nIndex = map (\x -> elemIndices x xs) nlist
 
 --foldData::Ord a=> [(a,Int)]->[(a,Int)]->[(a,Int)]
 foldData lxs rxs = map combind wlist
