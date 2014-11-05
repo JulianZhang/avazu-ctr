@@ -74,14 +74,14 @@ csvFileHandle =  bracket
 --	withFile "data/sample" ReadMode (\h-> readFileBatch h)
 
 readFileBatch h = do
-	slist <- lift $ readFileBatch' h []
+	slist <- lift $ readFileBatch' 0 h []
 	yield  $ getBlockCount $ map splitCSV slist
 	let eof = null slist
 	unless eof $  readFileBatch h
 
-readFileBatch'::Handle->[String]->IO [String]
-readFileBatch' h s 
-	| (length s)>=splitLength = do {return s} 
+readFileBatch'::Int->Handle->[String]->IO [String]
+readFileBatch' i h s 
+	| i >=splitLength = do {return s} 
 	-- |  lift (hIsEOF h) = do {return s} 
 	| otherwise = do
 		eof <- hIsEOF h
@@ -90,7 +90,7 @@ readFileBatch' h s
 			False -> do  
 				str <- hGetLine h
 				let newS = str:s 
-				let rStr = readFileBatch' h newS
+				let rStr = readFileBatch' (i+1) h newS
 				rStr 
 
 
