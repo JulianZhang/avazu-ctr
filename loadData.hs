@@ -24,13 +24,19 @@ splitLength = 10
 
 workdata = "workdata/"
 
-splitCSV "" = []
-splitCSV str = [s1] ++ splitCSV' s2
+
+skipCol ls = tail ls  
+
+
+splitCSV str = skipCol $ splitCSV' str
+
+splitCSV' "" = []
+splitCSV' str = [s1] ++ splitCSV'' s2
 	where 
 	(s1,s2) = break (\x -> ','==x) str
 
-splitCSV' "" = []
-splitCSV' str = splitCSV $ tail str
+splitCSV'' "" = []
+splitCSV'' str = splitCSV' $ tail str
 
 mySplit' [] = []
 mySplit' xs = [x] ++  mySplit' t 
@@ -147,7 +153,8 @@ main = do
 		performGC
 		t <- P.fold tStep initList tDone $ readFileBatch h >-> P.take num
 		performGC
-		let outList = zip (splitCSV csvHead) t 
+		let outList = zip (splitCSV csvHead) $ 
+			map (\x ->  sortBy (comparing snd) x) $ map DM.toList t 
 		mapM (\x -> appendFile "testdata"  ((show x)++ "\n" ) ) outList
 		-- p <- 
 		--runEffect $ readFileBatch h >-> P.stdoutLn 
