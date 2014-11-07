@@ -22,8 +22,6 @@ import qualified Data.Map as DM
 
 splitLength = 10
 
-workdata = "workdata/"
-
 
 skipCol ls = tail ls  
 
@@ -44,13 +42,8 @@ mySplit' xs = [x] ++  mySplit' t
 	x = take splitLength xs 
 	t = drop splitLength xs                
 
---mySplit::[a]->[(int,[a])]
 mySplit xs = zip [1..] ( mySplit' xs)
 
--- getBlockCount::Ord a => [[a]] -> [[(a,Int)]]
--- getBlockCount t =   map 
---	(map (\x -> ((head x),length x))) $ 
---	map group $ map sort $ transpose t
 
 getBlockCount t = map getCount $ transpose t
  
@@ -79,9 +72,7 @@ csvFileHandle =  bracket
 	(\h ->return h)
 	P.fromHandle
 
---csvFileBatchProducer::Producer' [[String]] IO ()
---csvFileBatchProducer= do 
---	withFile "data/sample" ReadMode (\h-> readFileBatch h)
+
 
 readFileBatch h count = do
 	slist <- lift $ readFileBatch' count h []
@@ -105,13 +96,6 @@ readFileBatch' i h s
 
 
 
-
-
-	-- aList <- [ (do { return await}) | y <- [1..10]  ]
-	-- putStrLn $ show aList
-
---tStep::[[(String,Int)]]->[[(String,Int)]]->[[(String,Int)]]
---tStep n a = DS.zipWith foldDataOne n (myMap a)
 
 tStep n a = zipWith foldData n a
 
@@ -139,15 +123,7 @@ initList = repeat emptyMap
 main = do 
 	s<- getArgs
 	let num =  (1+) $ (\x -> div x splitLength)  $ (read . head) s 
-	--let num = (read . head) s 
-	--hStr <- runSafeT $ runEffect $ csvFileHandle >-> P.take 1 >->myConsumer
-	--return hStr
-	--let p =  csvFileHandle >-> P.drop 1 >-> P.take num  
-	-- runSafeT $ runEffect $ 
-	--let n = P.fold tStep 0 tDone t
-	--t <- runSafeT $ P.fold tStep initList tDone p
-	-- mapM (\x -> appendFile "testdata"  (show x)) $ toList t
-	--runSafeT $ runEffect $ P.fold tStep 0 tDone $ csvFileHandle
+
 	withFile "data/test_rev2" ReadMode $ \h -> do 
 		csvHead <- hGetLine h 
 		performGC
@@ -156,8 +132,5 @@ main = do
 		let outList = zip (splitCSV csvHead) $ 
 			map (\x ->  sortBy (comparing snd) x) $ map DM.toList t 
 		mapM (\x -> appendFile "testdata"  ((show x)++ "\n" ) ) outList
-		-- p <- 
-		--runEffect $ readFileBatch h >-> P.stdoutLn 
-	--	t <- runEffect $ readFileBatch h >-> toString
-	--	return t
+
 	
