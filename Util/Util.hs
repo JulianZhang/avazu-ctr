@@ -1,6 +1,44 @@
 module Util.Util
   where
 
+import Pipes
+import System.IO
+import Control.Monad (unless)
+
+splitCSVWithColSkip f str = f $ splitCSV str 
+
+splitCSV str = splitCSV' str
+
+splitCSV' "" = []
+splitCSV' str = [s1] ++ splitCSV'' s2
+  where 
+  (s1,s2) = break (\x -> ','==x) str
+
+splitCSV'' "" = []
+splitCSV'' str = splitCSV' $ tail str
+
+
+readFileBatch h count readFunc batchFunc = do
+  slist <- lift $ readFileBatch' count h []
+  yield  $ batchFunc $ map readFunc slist
+  let eof = null slist
+  unless eof $  readFileBatch h count readFunc batchFunc
+
+readFileBatch'::Int->Handle->[String]->IO [String]
+readFileBatch' i h s 
+  | i == 0 = do {return s} 
+  -- |  lift (hIsEOF h) = do {return s} 
+  | otherwise = do
+    eof <- hIsEOF h
+    case eof of 
+      True -> do {return s }
+      False -> do  
+        str <- hGetLine h
+        let newS = str:s 
+        let rStr = readFileBatch' (i-1) h newS
+        rStr 
+
+
 getDiv::Int->Int->Float
 getDiv p n = (fromInteger px)/(fromInteger nx)
   where

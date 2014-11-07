@@ -13,11 +13,11 @@ import Pipes.Safe (bracket,SafeT(..), runSafeT)
 import qualified Data.Sequence as DS
 
 import Data.Foldable (toList)
-import Control.Monad (unless)
 
 import System.Mem
 
 import qualified Data.Map as DM
+import Util.Util
 
 
 splitLength = 10
@@ -26,15 +26,7 @@ splitLength = 10
 skipCol ls = tail ls  
 
 
-splitCSV str = skipCol $ splitCSV' str
 
-splitCSV' "" = []
-splitCSV' str = [s1] ++ splitCSV'' s2
-	where 
-	(s1,s2) = break (\x -> ','==x) str
-
-splitCSV'' "" = []
-splitCSV'' str = splitCSV' $ tail str
 
 mySplit' [] = []
 mySplit' xs = [x] ++  mySplit' t 
@@ -66,33 +58,8 @@ addData (Just is) lxs rs = DS.adjust addItem is lxs
 	where 
 	addItem (s,i) = (s,i+1)
 
-csvFileHandle::Producer' String (SafeT IO) ()
-csvFileHandle =  bracket 
-	(do {h <- openFile "data/test_rev2" ReadMode;return h}) 
-	(\h ->return h)
-	P.fromHandle
 
 
-
-readFileBatch h count = do
-	slist <- lift $ readFileBatch' count h []
-	yield  $ getBlockCount $ map splitCSV slist
-	let eof = null slist
-	unless eof $  readFileBatch h count
-
-readFileBatch'::Int->Handle->[String]->IO [String]
-readFileBatch' i h s 
-	| i == 0 = do {return s} 
-	-- |  lift (hIsEOF h) = do {return s} 
-	| otherwise = do
-		eof <- hIsEOF h
-		case eof of 
-			True -> do {return s }
-			False -> do  
-				str <- hGetLine h
-				let newS = str:s 
-				let rStr = readFileBatch' (i-1) h newS
-				rStr 
 
 
 
@@ -123,13 +90,16 @@ initList = repeat emptyMap
 main = do 
 	s<- getArgs
 	let num =  (1+) $ (\x -> div x splitLength)  $ (read . head) s 
-
+	let readCsv = splitCSVWithColSkip skipCol
 	withFile "data/test_rev2" ReadMode $ \h -> do 
 		csvHead <- hGetLine h 
 		performGC
-		t <- P.fold tStep initList tDone $ readFileBatch h splitLength >-> P.take num
+		t <- P.fold tStep initList tDone $ 
+			readFileBatch h splitLength 
+				readCsv  getBlockCount 
+			>-> P.take num
 		performGC
-		let outList = zip (splitCSV csvHead) $ 
+		let outList = zip  (readCsv csvHead) $ 
 			map (\x ->  sortBy (comparing snd) x) $ map DM.toList t 
 		mapM (\x -> appendFile "testdata"  ((show x)++ "\n" ) ) outList
 
