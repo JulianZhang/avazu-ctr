@@ -60,7 +60,7 @@ readFileBatch' i h s
 
 workdir = "workdata/"
 
-batchSize = 2000
+batchSize = 20
 
 readFromPipes::[Handle]->Consumer [BS.ByteString] IO ()
 readFromPipes head = do
@@ -82,11 +82,13 @@ openFiles fNameList = do
 closeFiles handleList = do
 	mapM_ hClose handleList
 
+newline = BS.c2w '\n'
+
 myBatchFunc ll = map foldLines newll
 	where
 		newll = transpose ll
 		foldLines ls = foldl 
-			(\x y -> BS.append (BS.snoc x (BS.c2w '\n') ) y ) 
+			(\x y -> BS.append (BS.snoc x newline  ) y ) 
 			(BSC.pack "") ls
 
 main = do 
