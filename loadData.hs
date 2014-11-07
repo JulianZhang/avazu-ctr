@@ -83,15 +83,15 @@ csvFileHandle =  bracket
 --csvFileBatchProducer= do 
 --	withFile "data/sample" ReadMode (\h-> readFileBatch h)
 
-readFileBatch h = do
-	slist <- lift $ readFileBatch' 0 h []
+readFileBatch h count = do
+	slist <- lift $ readFileBatch' count h []
 	yield  $ getBlockCount $ map splitCSV slist
 	let eof = null slist
-	unless eof $  readFileBatch h
+	unless eof $  readFileBatch h count
 
 readFileBatch'::Int->Handle->[String]->IO [String]
 readFileBatch' i h s 
-	| i >=splitLength = do {return s} 
+	| i == 0 = do {return s} 
 	-- |  lift (hIsEOF h) = do {return s} 
 	| otherwise = do
 		eof <- hIsEOF h
@@ -100,7 +100,7 @@ readFileBatch' i h s
 			False -> do  
 				str <- hGetLine h
 				let newS = str:s 
-				let rStr = readFileBatch' (i+1) h newS
+				let rStr = readFileBatch' (i-1) h newS
 				rStr 
 
 
@@ -151,7 +151,7 @@ main = do
 	withFile "data/test_rev2" ReadMode $ \h -> do 
 		csvHead <- hGetLine h 
 		performGC
-		t <- P.fold tStep initList tDone $ readFileBatch h >-> P.take num
+		t <- P.fold tStep initList tDone $ readFileBatch h splitLength >-> P.take num
 		performGC
 		let outList = zip (splitCSV csvHead) $ 
 			map (\x ->  sortBy (comparing snd) x) $ map DM.toList t 
