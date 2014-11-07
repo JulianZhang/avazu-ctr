@@ -62,7 +62,7 @@ readFileBatch' i h s
 
 workdir = "workdata/"
 
-batchSize = 20
+batchSize = 1
 
 readFromPipes::[Handle]->Consumer [BS.ByteString] IO ()
 readFromPipes head = do
@@ -101,7 +101,7 @@ main = do
 		csvHead <-BS.fromStrict <$> BSS.hGetLine h 
 		handleList <- openFiles (readCsv csvHead)
 		runEffect $ 
-			readFileBatch h batchSize readCsv  myBatchFunc         -- ( (map unlines) . transpose) 
+			readFileBatch h batchSize readCsv  head         -- ( (map unlines) . transpose) 
 			>-> P.take num >-> readFromPipes handleList
 		closeFiles handleList
 --		let outList = zip  (readCsv csvHead)  $ map DM.toList t 
