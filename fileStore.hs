@@ -24,8 +24,10 @@ import Data.Word (Word8)
 
 splitCSVWithColSkip f str = f $ splitCSV str 
 
+csvWord = BS.c2w ','
+
 splitCSV::BS.ByteString->[BS.ByteString]
-splitCSV str = BS.split (BS.c2w ',') str
+splitCSV str = BS.split csvWord str
 
 splitCSV' "" = []
 splitCSV' str = [s1] ++ splitCSV'' s2
@@ -88,7 +90,7 @@ myBatchFunc ll = map foldLines newll
 	where
 		newll = transpose ll
 		foldLines ls = foldl 
-			(\x y -> BS.append (BS.snoc x newline  ) y ) 
+			(\x y -> BS.append  x (BS.cons newline y) ) 
 			(BSC.pack "") ls
 
 main = do 
