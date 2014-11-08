@@ -93,6 +93,9 @@ myBatchFunc ll = map foldLines newll
 			(\x y -> BS.append  x (BS.cons newline y) ) 
 			(BSC.pack "") ls
 
+singleBatch ls = map (\x -> BS.cons newline x) $ head ls 
+
+
 main = do 
 	s<- getArgs
 	let num =  (1+) $ (\x -> div x batchSize)  $ (read . head) s 
@@ -101,7 +104,7 @@ main = do
 		csvHead <-BS.fromStrict <$> BSS.hGetLine h 
 		handleList <- openFiles (readCsv csvHead)
 		runEffect $ 
-			readFileBatch h batchSize readCsv  head         -- ( (map unlines) . transpose) 
+			readFileBatch h batchSize readCsv  singleBatch         -- ( (map unlines) . transpose) 
 			>-> P.take num >-> readFromPipes handleList
 		closeFiles handleList
 --		let outList = zip  (readCsv csvHead)  $ map DM.toList t 
