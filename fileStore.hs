@@ -63,9 +63,17 @@ saveCsvToColFile num = do
 			>-> P.take num >-> readFromPipes handleList
 		closeFiles handleList
 
+getHour bStr =  (\(x,y)->[x,y]) $ BS.splitAt 6 bStr
+
+splitHour num = do
+	withFile "dataByColumn/hour" ReadMode $ \h -> do
+		handleList <- openFiles $ map BSC.pack ["h_date","h_hour"]
+		runEffect $ readFileBatch h batchSize getHour singleBatch
+			>-> P.take num >-> readFromPipes handleList
+		closeFiles handleList
+
 main = do 
 	s<- getArgs
 	let num =  (1+) $ (\x -> div x batchSize)  $ (read . head) s 
-	saveCsvToColFile num
---		let outList = zip  (readCsv csvHead)  $ map DM.toList t 
---		mapM (\x -> appendFile "testdata"  ((show x)++ "\n" ) ) outList
+	splitHour num
+
