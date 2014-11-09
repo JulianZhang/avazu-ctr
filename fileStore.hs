@@ -18,11 +18,6 @@ import qualified Data.ByteString.Internal as BS (c2w,w2c)
 import qualified Data.ByteString.Lazy.Char8 as BSC
 
 
-
-
-
--- ===========================
-
 workdir = "workdata/"
 
 batchSize = 1
@@ -58,11 +53,8 @@ myBatchFunc ll = map foldLines newll
 
 singleBatch ls = map (\x -> BS.cons newline x) $ head ls 
 
-
-main = do 
-	s<- getArgs
-	let num =  (1+) $ (\x -> div x batchSize)  $ (read . head) s 
-	let readCsv = splitCSV 
+saveCsvToColFile num = do
+ 	let readCsv = splitCSV 
 	withFile "data/train_rev2" ReadMode $ \h -> do 
 		csvHead <-BS.fromStrict <$> BSS.hGetLine h 
 		handleList <- openFiles (readCsv csvHead)
@@ -70,5 +62,10 @@ main = do
 			readFileBatch h batchSize readCsv  singleBatch         -- ( (map unlines) . transpose) 
 			>-> P.take num >-> readFromPipes handleList
 		closeFiles handleList
+
+main = do 
+	s<- getArgs
+	let num =  (1+) $ (\x -> div x batchSize)  $ (read . head) s 
+	saveCsvToColFile num
 --		let outList = zip  (readCsv csvHead)  $ map DM.toList t 
 --		mapM (\x -> appendFile "testdata"  ((show x)++ "\n" ) ) outList
