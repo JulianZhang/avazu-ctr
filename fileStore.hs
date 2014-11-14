@@ -77,7 +77,7 @@ splitHour num = do
 			>-> P.take num >-> readFromPipes handleList
 		closeFiles handleList
 
-emptyMap = DM.empty::(DM.Map (String,String) Int)
+emptyMap = DM.empty::(DM.Map (BS.ByteString,BS.ByteString) Int)
 
 keyCount num = do
 	let parStrList = map BSC.pack [
@@ -95,22 +95,34 @@ keyCount num = do
 
 	writeHadleList <- openFilesAppend (map (\x -> BS.append x flag) parStrList)
 	let handPairList = zip readHandleList writeHadleList
-	clickList <- fmap lines $ readFile "dataByColumn/click"
+	clickList <- openFile "dataByColumn/click" ReadMode
 	mapM_ (\(x,y) -> rCount num clickList x y) handPairList
 	closeFiles writeHadleList
 	closeFiles readHandleList
 
-mapToString::DM.Map (String,String) Int-> String
+
+--mapToString::DM.Map (String,String) Int-> String
 mapToString m = unlines $ map eachItem itemList
 	where 
 		itemList = DM.toList m
 		eachItem ((x,y),i) = show x ++ "," ++ show y ++ "," ++ show i 
 
-rCount::Int -> [String] -> Handle->Handle -> IO()
+pipesCount  n = do
+  let ct = 10000
+  replicateM_  ct $ do                     -- Repeat this block 'n' times
+          x <- await                         -- 'await' a value of type 'a'
+          yield x                            -- 'yield' a value of type 'a'
+  lift $ putStrLn $ (show (n*ct) )  ++ "rows done!" 
+  pipesCount (n+1)
+
+genP::Handle->Producer BS.ByteString IO ()
+genP h =  readFileBatch h 1 id head 
+
+--rCount::Int -> [String] -> Handle->Handle -> IO()
 rCount num resultList readHandle writeHadle = do 
 	-- rP <- each resultList
 	-- keyP <- P.fromHandle readHandle
-	rt <- P.fold (\x y -> DM.unionWith (+) x y) emptyMap id $  P.zipWith (\x y -> DM.singleton (x,y) 1) (P.fromHandle readHandle) (each resultList) >-> P.take num
+	rt <- P.fold (\x y -> DM.unionWith (+) x y) emptyMap id $  P.zipWith (\x y -> DM.singleton (x,y) 1) (genP readHandle) (genP resultList) >-> P.take num >-> pipesCount 1
 	hPutStr writeHadle $ mapToString  rt
 	--hPutStr  writeHadle $ show rt
 	
