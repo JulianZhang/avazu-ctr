@@ -96,7 +96,7 @@ keyCount num = do
 	writeHadleList <- openFilesAppend (map (\x -> BS.append x flag) parStrList)
 	let handPairList = zip readHandleList writeHadleList
 	clickList <- openFile "dataByColumn/click" ReadMode
-	mapM_ (\(x,y) -> rCount num clickList x y) handPairList
+	rCount num clickList (head readHandleList) (head writeHadleList)
 	closeFiles writeHadleList
 	closeFiles readHandleList
 
