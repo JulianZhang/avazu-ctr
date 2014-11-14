@@ -6,7 +6,7 @@ import System.Environment
 import Pipes
 import qualified Pipes.Prelude as P
 
-import qualified Data.Map as DM
+import qualified Data.Map.Strict as DM
 import Control.Monad
 import Control.Applicative
 import Data.List
