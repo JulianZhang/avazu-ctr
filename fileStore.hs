@@ -17,7 +17,7 @@ import qualified Data.ByteString.Lazy as BS
 import qualified Data.ByteString.Internal as BS (c2w,w2c)
 import qualified Data.ByteString.Lazy.Char8 as BSC
 import qualified Data.Sequence as Vec
-import qualified Data.Traversable as DF
+import qualified Data.Foldable as DF
 
 workdir = "workdata/"
 
@@ -82,7 +82,7 @@ splitHour num = do
 emptyMap = DM.empty::(DM.Map (BS.ByteString,BS.ByteString) Int)
 
 keyCount num = do
-  let parStrList = map BSC.pack ["C1","C22","banner_pos","device_make"]
+  let parStrList = map BSC.pack ["C1" ,"C22"]--,"banner_pos","device_make"]
       --,"C17","C23","device_model","C18"
       --,"C24","device_conn_type","device_os","site_category"
       --,"C19","app_category","device_geo_country","device_type"
@@ -91,14 +91,14 @@ keyCount num = do
       --,"device_ip"
       --]
   let flag = BSC.pack "_count"
-  readHandleList <- fmap Vec.fromList $ openFiles "dataByColumn/" parStrList ReadMode
-  writeHadleList <- fmap Vec.fromList  $ openFilesAppend (map (\x -> BS.append x flag) parStrList)
-  --let handPairList = zip readHandleList writeHadleList
+  readHandleList <-  openFiles "dataByColumn/" parStrList ReadMode
+  writeHadleList <-  openFilesAppend (map (\x -> BS.append x flag) parStrList)
+  let handPairList = zip readHandleList writeHadleList
   clickList <- openFile "dataByColumn/click" ReadMode
-  out <- DF.sequence $ Vec.zipWith (rCount num clickList) readHandleList  writeHadleList
+  DF.sequence_ $ Vec.fromList $map (\(x,y) -> rCount num clickList x y) handPairList
   --closeFiles writeHadleList
   --closeFiles readHandleList
-  return out
+  --return out
 
 
 --mapToString::DM.Map (String,String) Int-> String
@@ -123,7 +123,7 @@ rCount num resultList readHandle writeHadle = do
   -- rP <- each resultList
   -- keyP <- P.fromHandle readHandle
   rt <- P.fold (\x y -> DM.unionWith (+) x y) emptyMap id $  P.zipWith (\x y -> DM.singleton (x,y) 1) (genP readHandle) (genP resultList) >-> P.take num >-> pipesCount 1
-  hPutStr writeHadle $ mapToString  rt
+  hPutStr writeHadle  $ mapToString  rt
   --hPutStr  writeHadle $ show rt
   
   --P.fold (DM.unionWith (+)) emptyMap id $
