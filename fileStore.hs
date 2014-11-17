@@ -79,10 +79,10 @@ splitHour num = do
       >-> P.take num >-> readFromPipes handleList
     closeFiles handleList
 
-emptyMap = DM.empty::(DM.Map (BS.ByteString,BS.ByteString) Int)
+emptyMap = DM.empty::(DM.Map (String,String) Int)
 
 keyCount num = do
-  let parStrList = map BSC.pack ["C1" ,"C22"]--,"banner_pos","device_make"]
+  let parStrList = map BSC.pack ["C1" ,"C22","banner_pos","device_make"]
       --,"C17","C23","device_model","C18"
       --,"C24","device_conn_type","device_os","site_category"
       --,"C19","app_category","device_geo_country","device_type"
@@ -94,10 +94,10 @@ keyCount num = do
   readHandleList <-  openFiles "dataByColumn/" parStrList ReadMode
   writeHadleList <-  openFilesAppend (map (\x -> BS.append x flag) parStrList)
   let handPairList = zip readHandleList writeHadleList
-  clickList <- openFile "dataByColumn/click" ReadMode
+  clickList <- fmap lines $ readFile "dataByColumn/click" 
   DF.sequence_ $ Vec.fromList $map (\(x,y) -> rCount num clickList x y) handPairList
-  --closeFiles writeHadleList
-  --closeFiles readHandleList
+  closeFiles writeHadleList
+  closeFiles readHandleList
   --return out
 
 
@@ -122,7 +122,7 @@ genP h =  readFileBatch h 1 id head
 rCount num resultList readHandle writeHadle = do 
   -- rP <- each resultList
   -- keyP <- P.fromHandle readHandle
-  rt <- P.fold (\x y -> DM.unionWith (+) x y) emptyMap id $  P.zipWith (\x y -> DM.singleton (x,y) 1) (genP readHandle) (genP resultList) >-> P.take num >-> pipesCount 1
+  rt <- P.fold (\x y -> DM.unionWith (+) x y) emptyMap id $  P.zipWith (\x y -> DM.singleton (x,y) 1) (P.fromHandle readHandle) (each resultList) >-> P.take num >-> pipesCount 1
   hPutStr writeHadle  $ mapToString  rt
   --hPutStr  writeHadle $ show rt
   
