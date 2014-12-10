@@ -48,7 +48,7 @@ countProb pList = zipWith getProb kflist kfcount
 		getFlagCount f  = flagCount!!fi
 			where
 				fi = head $ elemIndices f flagList
-		getProb (k,f) v = ((k,f),((v/kc),kc))
+		getProb (k,f) v = ((k,f),(( (v+1)/(kc+1) ),kc))
 			where
 				kc = getKeyCount k
 				fc = getFlagCount f 
