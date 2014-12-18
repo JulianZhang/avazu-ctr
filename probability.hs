@@ -81,7 +81,7 @@ testProb headFile probDir testFile output = do
 	 
 	--testList <- fmap (tail . fromCSVTable . csvTable . parseCSV ) $ readFile testFile -- fist row is not data
 	--fmap putStrLn $ fmap show $ fmap (testProbAll testList) probList
-	runEffect $ ( P.fromHandle hTest) >-> P.drop 1 >-> P.take 1000 >->
+	runEffect $ ( P.fromHandle hTest) >-> P.drop 1 >-> P.take 100000 >->
 		P.map splitCSV' >-> P.map (testProbStep probList) >-> P.toHandle hOutput    
 	hClose hOutput
 
@@ -116,6 +116,7 @@ findProb pd key =  DM.findWithDefault defaultPrb (key,"1") keyMap
 	kf =  filter (\x ->and [(key == (x!!0) ),("1"== (x!!1) )] ) pd
 	keyMap = DM.fromList $ map list2map pd
 
+list2map::[String]->((String,String),Double)
 list2map pl = ((pv,tag),value)
 	where 
 		pv = head pl 
