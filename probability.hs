@@ -62,5 +62,8 @@ getCount getFun inList = (klist,kcount)
 
 
 
+main = loadFiles "./mapCount/" "./workdata/"
+
+
 
 

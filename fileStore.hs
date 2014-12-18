@@ -82,7 +82,11 @@ splitHour num = do
 emptyMap = DM.empty::(DM.Map (String,String) Int)
 
 keyCount num = do
-  let parStrList = map BSC.pack ["C24","device_conn_type","device_os","site_category","C19","app_category","device_geo_country","device_type"]
+  let parStrList = map BSC.pack ["h_date","device_ip"]
+
+       --["site_id","C21","app_id","h_hour","site_domain","C20","app_domain","device_id"]
+
+       --["C24","device_conn_type","device_os","site_category","C19","app_category","device_geo_country","device_type"]
 
        --["C17","C23","device_model","C18"] --["C1" ,"C22","banner_pos","device_make"]
       
@@ -127,6 +131,7 @@ rCount num resultList readHandle writeHadle = do
   rt <- P.fold (\x y -> DM.unionWith (+) x y) emptyMap id $  P.zipWith (\x y -> DM.singleton (x,y) 1) (P.fromHandle readHandle) (P.fromHandle rP) >-> P.take num >-> pipesCount 1
   hPutStr writeHadle  $ mapToString  rt
   hClose rP
+  hClose writeHadle
   --hPutStr  writeHadle $ show rt
   
   --P.fold (DM.unionWith (+)) emptyMap id $
