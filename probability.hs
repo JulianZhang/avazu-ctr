@@ -89,7 +89,7 @@ getProb probDir colStr = do
 	flag <- doesFileExist filePath
 	case flag of 
 		False -> return (\_ -> 1.0)
-		True ->  return (\_ -> 0.9) -- getProb' filePath
+		True ->  getProb' filePath
 
 --getprob'::String->[((String,String),(Double,Double))]
 getProb' filePath = do
@@ -97,11 +97,16 @@ getProb' filePath = do
 	return $ findProb pd
 
 findProb::[[String]]->String->Double
-findProb pd key = read $ kf!!2
+findProb pd key = read $ findProb' kf 
 	where
-	kf = head $ filter (\x ->and [(key == (x!!0) ),("1"== (x!!1) )] ) pd
+	kf =  filter (\x ->and [(key == (x!!0) ),("1"== (x!!1) )] ) pd
+
+findProb' [] = defaultPrb
+findProb' kf = (head kf)!!2
 
 main = loadFiles "./mapCount/" "./workdata/"
+
+defaultPrb = show $ 8228184 / (39451816 + 8228184)
 
 
 
