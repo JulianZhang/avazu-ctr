@@ -11,6 +11,8 @@ import qualified Pipes.Prelude as P
 
 import Util.Util
 
+import qualified Data.Map.Strict as DM
+
 
 loadFiles dir wdir = do
 	fileList <- fmap tail $ fmap tail $ getDirectoryContents dir
@@ -109,16 +111,24 @@ getProb' filePath = do
 	return $ findProb pd
 
 findProb::[[String]]->String->Double
-findProb pd key = read $ findProb' kf 
+findProb pd key =  DM.findWithDefault defaultPrb (key,"1") keyMap 
 	where
 	kf =  filter (\x ->and [(key == (x!!0) ),("1"== (x!!1) )] ) pd
+	keyMap = DM.fromList $ map list2map pd
+
+list2map pl = ((pv,tag),value)
+	where 
+		pv = head pl 
+		tag = head $ tail pl 
+		value = read $ head $ tail $ tail pl  
 
 findProb' [] = defaultPrb
 findProb' kf = (head kf)!!2
 
-main = testProb "./data/test_header.csv" "./probData/" "./data/test_rev2"  "./workdata/test2"
+main = testProb "./data/test_header.csv" "./probData/" "./data/test_rev2"  "./workdata/test3"
 
-defaultPrb = show $ 8228184 / (39451816 + 8228184)
+defaultPrb::Double
+defaultPrb =   8228184 / (39451816 + 8228184)
 
 
 
