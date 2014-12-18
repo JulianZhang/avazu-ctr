@@ -5,7 +5,11 @@ import Text.CSV.Lazy.String
 
 import Data.List
 import Control.Monad
---import parsec
+
+import Pipes
+import qualified Pipes.Prelude as P
+
+import Util.Util
 
 
 loadFiles dir wdir = do
@@ -70,8 +74,16 @@ testProb headFile probDir testFile output = do
 	let idStr = head headList
 	let colList  = tail headList
 	let probList = getProbList colList probDir
+	hOutput <- openFile output AppendMode
+	hTest <- openFile testFile ReadMode 
+	 
 	testList <- fmap (tail . fromCSVTable . csvTable . parseCSV ) $ readFile testFile -- fist row is not data
-	fmap putStrLn $ fmap show $ fmap (testProbAll testList) probList
+	--fmap putStrLn $ fmap show $ fmap (testProbAll testList) probList
+	runEffect $ ( P.fromHandle hTest) >-> P.drop 1 >-> P.take 1000>->
+		P.map splitCSV' >-> P.mapM (\x -> fmap (\y -> testProbStep y x) probList) >-> P.toHandle hOutput    
+	hClose hOutput
+
+	--P.map (fmap testProbStep probList) $ P.map  splitCSV' 
 
 testProbAll testList probList = map (testProbStep probList) testList
 
