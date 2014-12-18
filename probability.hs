@@ -73,14 +73,14 @@ testProb headFile probDir testFile output = do
 	headList <- fmap (head . fromCSVTable . csvTable . parseCSV ) $ readFile headFile
 	let idStr = head headList
 	let colList  = tail headList
-	let probList = getProbList colList probDir
+	probList <- getProbList colList probDir
 	hOutput <- openFile output AppendMode
 	hTest <- openFile testFile ReadMode 
 	 
-	testList <- fmap (tail . fromCSVTable . csvTable . parseCSV ) $ readFile testFile -- fist row is not data
+	--testList <- fmap (tail . fromCSVTable . csvTable . parseCSV ) $ readFile testFile -- fist row is not data
 	--fmap putStrLn $ fmap show $ fmap (testProbAll testList) probList
-	runEffect $ ( P.fromHandle hTest) >-> P.drop 1 >-> P.take 1000>->
-		P.map splitCSV' >-> P.mapM (\x -> fmap (\y -> testProbStep y x) probList) >-> P.toHandle hOutput    
+	runEffect $ ( P.fromHandle hTest) >-> P.drop 1 >-> P.take 1000 >->
+		P.map splitCSV' >-> P.map (testProbStep probList) >-> P.toHandle hOutput    
 	hClose hOutput
 
 	--P.map (fmap testProbStep probList) $ P.map  splitCSV' 
@@ -116,7 +116,7 @@ findProb pd key = read $ findProb' kf
 findProb' [] = defaultPrb
 findProb' kf = (head kf)!!2
 
-main = loadFiles "./mapCount/" "./workdata/"
+main = testProb "./data/test_header.csv" "./probData/" "./data/test_rev2"  "./workdata/test2"
 
 defaultPrb = show $ 8228184 / (39451816 + 8228184)
 
