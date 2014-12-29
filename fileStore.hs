@@ -62,7 +62,7 @@ singleBatch ls = map (\x -> BS.cons newline x) $ head ls
 
 saveCsvToColFile num = do
   let readCsv = splitCSV 
-  withFile "data/train_rev2" ReadMode $ \h -> do 
+  withFile "data2/train" ReadMode $ \h -> do 
     csvHead <-BS.fromStrict <$> BSS.hGetLine h 
     handleList <- openFilesAppend (readCsv csvHead)
     runEffect $ 
@@ -82,20 +82,7 @@ splitHour num = do
 emptyMap = DM.empty::(DM.Map (String,String) Int)
 
 keyCount num = do
-  let parStrList = map BSC.pack ["h_date","device_ip"]
-
-       --["site_id","C21","app_id","h_hour","site_domain","C20","app_domain","device_id"]
-
-       --["C24","device_conn_type","device_os","site_category","C19","app_category","device_geo_country","device_type"]
-
-       --["C17","C23","device_model","C18"] --["C1" ,"C22","banner_pos","device_make"]
-      
-      --,
-      --
-      --,"site_domain","C20","app_domain","device_id","h_date"
-      --,"site_id","C21","app_id","h_hour"
-      --,"device_ip"
-      --]
+  let parStrList = map BSC.pack ["C1","banner_pos","site_id","site_domain","site_category","app_id","app_domain","app_category","device_model","device_type","device_conn_type","C14","C15","C16","C17","C18","C19","C20","C21","device_id","device_ip"]
   let flag = BSC.pack "_count"
   readHandleList <-  openFiles "dataByColumn/" parStrList ReadMode
   writeHadleList <-  openFilesAppend (map (\x -> BS.append x flag) parStrList)
@@ -142,4 +129,5 @@ main = do
   s<- getArgs
   let num =  (1+) $ (\x -> div x batchSize)  $ (read . head) s 
   keyCount num
+  --saveCsvToColFile num
 

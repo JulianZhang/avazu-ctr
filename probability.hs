@@ -77,11 +77,10 @@ testProb headFile probDir testFile output = do
 	let colList  = tail headList
 	probList <- getProbList colList probDir
 	hOutput <- openFile output AppendMode
-	hTest <- openFile testFile ReadMode 
-	 
+	hTest <- openFile testFile ReadMode  
 	--testList <- fmap (tail . fromCSVTable . csvTable . parseCSV ) $ readFile testFile -- fist row is not data
 	--fmap putStrLn $ fmap show $ fmap (testProbAll testList) probList
-	runEffect $ ( P.fromHandle hTest) >-> P.drop 1 >-> P.take 100000 >->
+	runEffect $ ( P.fromHandle hTest) >-> P.drop 1 >-> P.take 1000000000 >->
 		P.map splitCSV' >-> P.map (testProbStep probList) >-> P.toHandle hOutput    
 	hClose hOutput
 
@@ -126,10 +125,12 @@ list2map pl = ((pv,tag),value)
 findProb' [] = defaultPrb
 findProb' kf = (head kf)!!2
 
-main = testProb "./data/test_header.csv" "./probData/" "./data/test_rev2"  "./workdata/test3"
+main = do
+	loadFiles "./mapCount/" "./probData/"
+	testProb "./data2/test.header" "./probData/" "./data2/test"  "./workdata/newtest"
 
 defaultPrb::Double
-defaultPrb =   8228184 / (39451816 + 8228184)
+defaultPrb =   6865046 / (33563854 + 6865046)
 
 
 
