@@ -65,6 +65,7 @@ ft v
 	| v == -14 = "0.5"	
 	| otherwise = "0"
 
-main = finalResult "./workdata/re_lv" "./workdata/ft2" 4577464
+main = finalResult "./workdata/re_lv2" "./workdata/ft3" 4577464
+	--cleanResult "./workdata/newtest2" "./workdata/re_lv2" 4577464 >> countResult "./workdata/re_lv2" "./workdata/re_count2" 4577464
 	-- countResult "./workdata/re_lv" "./workdata/re_count" 4577464
---cleanResult "./workdata/newtest" "./workdata/re_lv" 4577464 >> finalResult "./workdata/re_lv" "./workdata/ft" 4577464
+    --cleanResult "./workdata/newtest" "./workdata/re_lv" 4577464 >> finalResult "./workdata/re_lv" "./workdata/ft" 4577464

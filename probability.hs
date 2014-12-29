@@ -110,30 +110,30 @@ getProb' filePath = do
 	return $ findProb pd
 
 findProb::[[String]]->String->Double
-findProb pd key =  DM.findWithDefault defaultPrb (key,"1") keyMap 
+findProb pd key = findProb''$ DM.findWithDefault (defaultPrb,10000.0) (key,"1") keyMap 
 	where
 	kf =  filter (\x ->and [(key == (x!!0) ),("1"== (x!!1) )] ) pd
 	keyMap = DM.fromList $ map list2map pd
 
-list2map::[String]->((String,String),Double)
-list2map pl = ((pv,tag),value)
+list2map::[String]->((String,String),(Double,Double) )
+list2map pl = ((pv,tag),(value,count) )
 	where 
 		pv = head pl 
 		tag = head $ tail pl 
 		value = read $ head $ tail $ tail pl  
+		count = read $ last pl
 
-findProb' [] = defaultPrb
-findProb' kf = (head kf)!!2
+
+
+findProb'' (prob,count)
+	| count > countT = prob
+	| otherwise = defaultPrb
 
 main = do
-	loadFiles "./mapCount/" "./probData/"
-	testProb "./data2/test.header" "./probData/" "./data2/test"  "./workdata/newtest"
+	-- loadFiles "./mapCount/" "./probData/"
+	testProb "./data2/test.header" "./probData/" "./data2/test"  "./workdata/newtest2"
 
 defaultPrb::Double
 defaultPrb =   6865046 / (33563854 + 6865046)
 
-
-
-
-
-
+countT = 500.0
